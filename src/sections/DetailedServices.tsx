@@ -41,7 +41,7 @@ const sections = [
     intro: "LIC of India is the most trusted name in life insurance. As your dedicated LIC consultant, I help you choose the right policy that matches your family's needs, income and goals.",
     points: licPoints,
     cta: "Confused about LIC policies? Get a free LIC plan consultation today.",
-    gradient: "from-primary/5 to-transparent",
+    gradient: "from-[hsl(217,71%,97%)] via-[hsl(43,50%,97%)] to-[hsl(210,30%,96%)]",
     accentColor: "text-primary",
     borderColor: "border-primary/20",
   },
@@ -54,7 +54,7 @@ const sections = [
     intro: "UTI Mutual Fund offers a wide range of schemes for every investor profile. I help you plan disciplined investments so your money works hard for your future.",
     points: utiPoints,
     cta: "Start your UTI mutual fund investment with proper planning and guidance.",
-    gradient: "from-teal/5 to-transparent",
+    gradient: "from-[hsl(174,30%,96%)] via-[hsl(210,30%,97%)] to-[hsl(43,40%,96%)]",
     accentColor: "text-teal",
     borderColor: "border-teal/20",
   },
@@ -67,7 +67,7 @@ const sections = [
     intro: "Medical emergencies can happen anytime. Star Health Insurance gives you financial protection with comprehensive health coverage for individuals and families.",
     points: starPoints,
     cta: "Choose the right Star Health insurance policy before a medical emergency happens.",
-    gradient: "from-coral/5 to-transparent",
+    gradient: "from-[hsl(16,40%,96%)] via-[hsl(43,50%,96%)] to-[hsl(174,30%,96%)]",
     accentColor: "text-coral",
     borderColor: "border-coral/20",
   },
@@ -76,7 +76,7 @@ const sections = [
 const DetailedServices = () => (
   <div id="detailed-services">
     {sections.map((s, idx) => (
-      <section key={s.id} className={`border-b border-border py-16 last:border-b-0 bg-gradient-to-r ${s.gradient}`}>
+      <section key={s.id} className={`border-b border-border py-16 last:border-b-0 bg-gradient-to-br ${s.gradient}`}>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

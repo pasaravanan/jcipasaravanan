@@ -18,7 +18,7 @@ const ContactSection = () => {
   };
 
   return (
-    <section id="contact" className="bg-gradient-to-b from-background to-muted py-16">
+    <section id="contact" className="bg-gradient-to-br from-[hsl(215,25%,92%)] via-[hsl(43,50%,95%)] to-[hsl(174,30%,95%)] py-16">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

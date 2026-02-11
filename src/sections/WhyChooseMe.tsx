@@ -11,7 +11,7 @@ const reasons = [
 ];
 
 const WhyChooseMe = () => (
-  <section id="why-choose-me" className="bg-gradient-to-b from-background to-muted py-16">
+  <section id="why-choose-me" className="bg-gradient-to-br from-[hsl(210,30%,96%)] via-[hsl(16,40%,96%)] to-[hsl(43,50%,95%)] py-16">
     <div className="container mx-auto px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}

@@ -30,7 +30,7 @@ const services = [
 ];
 
 const ServicesCards = () => (
-  <section id="services" className="py-16">
+  <section id="services" className="bg-gradient-to-br from-[hsl(210,30%,96%)] via-[hsl(43,76%,97%)] to-[hsl(174,40%,95%)] py-16">
     <div className="container mx-auto px-4">
       <motion.h2
         initial={{ opacity: 0, y: 20 }}

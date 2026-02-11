@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 
 const AboutIntro = () => (
-  <section className="bg-gradient-to-br from-muted via-background to-muted py-16">
+  <section className="bg-gradient-to-br from-[hsl(174,30%,95%)] via-[hsl(210,30%,96%)] to-[hsl(43,40%,96%)] py-16">
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}

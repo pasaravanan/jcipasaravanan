@@ -1,7 +1,7 @@
 import { Phone, Mail, MapPin } from "lucide-react";
 
 const Footer = () => (
-  <footer className="bg-navy text-navy-foreground">
+  <footer className="bg-gradient-to-r from-navy via-primary to-navy text-navy-foreground">
     <div className="container mx-auto grid gap-8 px-4 py-12 md:grid-cols-3">
       <div>
         <h3 className="mb-3 font-display text-xl font-bold text-gold">JC.HGF.PA.SARAVANAN</h3>
