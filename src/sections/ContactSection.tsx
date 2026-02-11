@@ -6,15 +6,43 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import emailjs from "@emailjs/browser";
+
+const SERVICE_ID = "service_kajxumb";
+const TEMPLATE_ID = "template_fgzngre";
+const PUBLIC_KEY = "4xjOt5tRNPz7jBmuq";
+
+const serviceLabels: Record<string, string> = {
+  lic: "LIC Insurance",
+  uti: "UTI Mutual Fund",
+  star: "Star Health Insurance",
+  other: "Other Financial Service",
+};
 
 const ContactSection = () => {
   const { toast } = useToast();
   const [form, setForm] = useState({ name: "", mobile: "", email: "", service: "", message: "" });
+  const [sending, setSending] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({ title: "Thank you!", description: "Your consultation request has been received. We will contact you soon." });
-    setForm({ name: "", mobile: "", email: "", service: "", message: "" });
+    setSending(true);
+    try {
+      const subject = `Consultation Request – ${serviceLabels[form.service] || "General"}`;
+      const fullMessage = `Name: ${form.name}\nMobile: ${form.mobile}\nEmail: ${form.email}\nService: ${serviceLabels[form.service] || "Not specified"}\n\nMessage:\n${form.message}`;
+      await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+        from_name: form.name,
+        from_email: form.email || "Not provided",
+        subject,
+        message: fullMessage,
+      }, PUBLIC_KEY);
+      toast({ title: "Thank you!", description: "Your consultation request has been sent. We will contact you soon." });
+      setForm({ name: "", mobile: "", email: "", service: "", message: "" });
+    } catch {
+      toast({ title: "Oops!", description: "Failed to send. Please try WhatsApp or call directly.", variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -96,8 +124,8 @@ const ContactSection = () => {
                 </SelectContent>
               </Select>
               <Textarea placeholder="Your Message" rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
-              <Button type="submit" className="w-full bg-gold text-gold-foreground hover:bg-gold/90" size="lg">
-                Request a Financial Consultation
+              <Button type="submit" className="w-full bg-gold text-gold-foreground hover:bg-gold/90" size="lg" disabled={sending}>
+                {sending ? "Sending..." : "Request a Financial Consultation"}
               </Button>
             </form>
           </motion.div>
