@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import profilePhoto from "@/assets/profile-photo.jpg";
 
 const HeroSection = () => (
-  <section id="home" className="relative overflow-hidden bg-primary">
+  <section id="home" className="relative overflow-hidden bg-gradient-to-br from-primary via-[hsl(220,50%,15%)] to-navy">
     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--gold)/0.15),transparent_60%)]" />
     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(var(--teal)/0.1),transparent_50%)]" />
     <div className="container relative mx-auto grid items-center gap-10 px-4 py-16 md:grid-cols-2 md:py-24">

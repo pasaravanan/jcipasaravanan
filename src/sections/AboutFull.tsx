@@ -14,7 +14,7 @@ const skills = [
 ];
 
 const AboutFull = () => (
-  <section id="about" className="py-16">
+  <section id="about" className="bg-gradient-to-br from-[hsl(174,30%,95%)] via-[hsl(210,30%,96%)] to-[hsl(215,25%,92%)] py-16">
     <div className="container mx-auto max-w-4xl px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}

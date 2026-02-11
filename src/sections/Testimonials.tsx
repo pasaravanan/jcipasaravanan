@@ -10,7 +10,7 @@ const testimonials = [
 ];
 
 const Testimonials = () => (
-  <section id="testimonials" className="bg-gradient-to-b from-muted to-background py-16">
+  <section id="testimonials" className="bg-gradient-to-br from-[hsl(43,40%,96%)] via-[hsl(210,30%,96%)] to-[hsl(174,30%,95%)] py-16">
     <div className="container mx-auto px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}

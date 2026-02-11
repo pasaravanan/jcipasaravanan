@@ -14,7 +14,7 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 bg-primary shadow-lg">
+    <nav className="sticky top-0 z-50 bg-gradient-to-r from-primary via-[hsl(220,50%,18%)] to-navy shadow-lg">
       <div className="container mx-auto flex items-center justify-between px-4 py-3">
         <a href="#home" className="flex flex-col leading-tight">
           <span className="font-display text-lg font-bold text-primary-foreground">JC.HGF.PA.SARAVANAN</span>
@@ -40,7 +40,7 @@ const Navbar = () => {
       </div>
 
       {open && (
-        <div className="border-t border-primary-foreground/20 bg-primary lg:hidden">
+        <div className="border-t border-primary-foreground/20 bg-gradient-to-b from-[hsl(220,50%,18%)] to-navy lg:hidden">
           <ul className="flex flex-col px-4 py-2">
             {navLinks.map((link) => (
               <li key={link.to}>
