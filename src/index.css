@@ -42,6 +42,12 @@
     --gold: 43 76% 52%;
     --gold-foreground: 220 40% 13%;
 
+    --teal: 174 62% 47%;
+    --teal-foreground: 0 0% 100%;
+
+    --coral: 16 85% 60%;
+    --coral-foreground: 0 0% 100%;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -76,6 +82,10 @@
     --navy-foreground: 210 40% 98%;
     --gold: 43 76% 52%;
     --gold-foreground: 220 40% 13%;
+    --teal: 174 62% 47%;
+    --teal-foreground: 0 0% 100%;
+    --coral: 16 85% 60%;
+    --coral-foreground: 0 0% 100%;
   }
 }
 
@@ -90,4 +100,8 @@
   h1, h2, h3, h4 {
     font-family: 'Playfair Display', serif;
   }
+}
+
+html {
+  scroll-behavior: smooth;
 }

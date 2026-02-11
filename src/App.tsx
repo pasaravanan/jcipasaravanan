@@ -1,39 +1,40 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Layout from "./components/Layout";
-import Index from "./pages/Index";
-import Services from "./pages/Services";
-import WhyChooseMe from "./pages/WhyChooseMe";
-import About from "./pages/About";
-import Testimonials from "./pages/Testimonials";
-import Contact from "./pages/Contact";
-import NotFound from "./pages/NotFound";
-
-const queryClient = new QueryClient();
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import MobileBottomBar from "./components/MobileBottomBar";
+import HeroSection from "./sections/HeroSection";
+import LogoStrip from "./sections/LogoStrip";
+import ServicesCards from "./sections/ServicesCards";
+import AboutIntro from "./sections/AboutIntro";
+import DetailedServices from "./sections/DetailedServices";
+import WhyChooseMe from "./sections/WhyChooseMe";
+import AboutFull from "./sections/AboutFull";
+import Testimonials from "./sections/Testimonials";
+import ContactSection from "./sections/ContactSection";
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/why-choose-me" element={<WhyChooseMe />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/testimonials" element={<Testimonials />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Layout>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <TooltipProvider>
+    <Toaster />
+    <Sonner />
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
+      <main className="flex-1 pb-16 md:pb-0">
+        <HeroSection />
+        <LogoStrip />
+        <ServicesCards />
+        <AboutIntro />
+        <DetailedServices />
+        <WhyChooseMe />
+        <AboutFull />
+        <Testimonials />
+        <ContactSection />
+      </main>
+      <Footer />
+      <MobileBottomBar />
+    </div>
+  </TooltipProvider>
 );
 
 export default App;
