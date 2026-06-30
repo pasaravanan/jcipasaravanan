@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cldThumb } from "@/lib/cloudinary";
 import GalleryLightbox from "./GalleryLightbox";
@@ -100,39 +101,49 @@ export default function GallerySection() {
             className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
           >
             <AnimatePresence>
-              {shown.map((p, idx) => (
-                <motion.button
-                  key={p.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  whileHover={{ scale: 1.02 }}
-                  onClick={() => setLightboxIndex(idx)}
-                  className="group relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted shadow-md transition hover:shadow-xl"
-                >
-                  <img
-                    src={cldThumb(p.image_url, 600)}
-                    alt={p.caption || "Gallery image"}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                  />
-                  {p.category && (
-                    <span
-                      className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-semibold ${
-                        badgeColors[p.category] || "bg-slate-600 text-white"
-                      }`}
-                    >
-                      {p.category}
-                    </span>
-                  )}
-                  {p.caption && (
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 text-left">
-                      <p className="line-clamp-2 text-sm font-medium text-white">{p.caption}</p>
-                    </div>
-                  )}
-                </motion.button>
-              ))}
+              {shown.map((p, idx) => {
+                const isVideo = p.image_url.includes("/video/upload/") || p.image_url.match(/\.(mp4|webm|ogg|mov)($|\?)/i);
+                return (
+                  <motion.button
+                    key={p.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => setLightboxIndex(idx)}
+                    className="group relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted shadow-md transition hover:shadow-xl"
+                  >
+                    <img
+                      src={cldThumb(p.image_url, 600)}
+                      alt={p.caption || "Gallery item"}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                    />
+                    {isVideo && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/25 transition duration-500">
+                        <div className="rounded-full bg-white/20 p-3 text-white backdrop-blur transition duration-300 group-hover:scale-110">
+                          <Play className="h-6 w-6 fill-white" />
+                        </div>
+                      </div>
+                    )}
+                    {p.category && (
+                      <span
+                        className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-semibold ${
+                          badgeColors[p.category] || "bg-slate-600 text-white"
+                        }`}
+                      >
+                        {p.category}
+                      </span>
+                    )}
+                    {p.caption && (
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 text-left">
+                        <p className="line-clamp-2 text-sm font-medium text-white">{p.caption}</p>
+                      </div>
+                    )}
+                  </motion.button>
+                );
+              })}
             </AnimatePresence>
           </motion.div>
         )}

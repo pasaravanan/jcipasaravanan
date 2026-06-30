@@ -70,6 +70,7 @@ Deno.serve(async (req) => {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
+      const resourceType = body.resource_type === 'video' ? 'video' : 'image'
       const timestamp = Math.floor(Date.now() / 1000)
       const toSign = `public_id=${publicId}&timestamp=${timestamp}${apiSecret}`
       const signature = await sha1(toSign)
@@ -78,7 +79,7 @@ Deno.serve(async (req) => {
       formData.append('api_key', API_KEY)
       formData.append('timestamp', String(timestamp))
       formData.append('signature', signature)
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/destroy`, {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/destroy`, {
         method: 'POST', body: formData,
       })
       const result = await res.json()

@@ -102,11 +102,20 @@ export default function GalleryLightbox({
           onClick={(e) => e.stopPropagation()}
           className="flex max-h-full max-w-5xl flex-col items-center"
         >
-          <img
-            src={cldFull(current.image_url, 1200)}
-            alt={current.caption || ""}
-            className="max-h-[80vh] max-w-full rounded-lg object-contain"
-          />
+          {current.image_url.includes("/video/upload/") || current.image_url.match(/\.(mp4|webm|ogg|mov)($|\?)/i) ? (
+            <video
+              src={current.image_url}
+              controls
+              autoPlay
+              className="max-h-[80vh] max-w-full rounded-lg object-contain"
+            />
+          ) : (
+            <img
+              src={cldFull(current.image_url, 1200)}
+              alt={current.caption || ""}
+              className="max-h-[80vh] max-w-full rounded-lg object-contain"
+            />
+          )}
           <div className="mt-4 max-w-3xl text-center text-white">
             {current.caption && <p className="text-lg">{current.caption}</p>}
             <p className="mt-1 text-sm text-white/70">

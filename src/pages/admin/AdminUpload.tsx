@@ -25,7 +25,7 @@ export default function AdminUpload() {
   const addFiles = (files: FileList | null) => {
     if (!files) return;
     const next: Item[] = Array.from(files)
-      .filter((f) => f.type.startsWith("image/"))
+      .filter((f) => f.type.startsWith("image/") || f.type.startsWith("video/"))
       .map((f) => ({
         id: crypto.randomUUID(),
         file: f,
@@ -67,14 +67,14 @@ export default function AdminUpload() {
         toast.error(`Failed: ${item.file.name} — ${err.message || "error"}`);
       }
     }
-    toast.success(`${success} of ${items.length} images uploaded successfully`);
+    toast.success(`${success} of ${items.length} files uploaded successfully`);
     setUploading(false);
     setTimeout(() => setItems((prev) => prev.filter((i) => i.status !== "done")), 1500);
   };
 
   return (
     <AdminLayout>
-      <h1 className="mb-6 font-display text-2xl font-bold text-navy">Upload Images</h1>
+      <h1 className="mb-6 font-display text-2xl font-bold text-navy">Upload Files</h1>
 
       <div
         onDragOver={(e) => e.preventDefault()}
@@ -86,12 +86,12 @@ export default function AdminUpload() {
         className="cursor-pointer rounded-2xl border-2 border-dashed border-primary/30 bg-white p-10 text-center transition hover:border-primary hover:bg-primary/5"
       >
         <Upload className="mx-auto mb-3 h-10 w-10 text-primary" />
-        <p className="font-medium">Drag and drop images here or click to browse</p>
-        <p className="mt-1 text-sm text-muted-foreground">JPG, PNG, WEBP, GIF</p>
+        <p className="font-medium">Drag and drop images/videos here or click to browse</p>
+        <p className="mt-1 text-sm text-muted-foreground">JPG, PNG, WEBP, GIF, MP4, WEBM, MOV</p>
         <input
           ref={inputRef}
           type="file"
-          accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+          accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,video/mp4,video/webm,video/ogg,video/quicktime"
           multiple
           className="hidden"
           onChange={(e) => addFiles(e.target.files)}
@@ -102,7 +102,11 @@ export default function AdminUpload() {
         <div className="mt-6 space-y-3">
           {items.map((it) => (
             <div key={it.id} className="flex flex-col gap-4 rounded-xl bg-white p-4 shadow-sm sm:flex-row">
-              <img src={it.preview} alt="" className="h-24 w-24 rounded-lg object-cover" />
+              {it.file.type.startsWith("video/") ? (
+                <video src={it.preview} className="h-24 w-24 rounded-lg object-cover" muted playsInline />
+              ) : (
+                <img src={it.preview} alt="" className="h-24 w-24 rounded-lg object-cover" />
+              )}
               <div className="flex-1 space-y-2">
                 <input
                   type="text"
@@ -152,7 +156,7 @@ export default function AdminUpload() {
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-primary-foreground shadow disabled:opacity-50"
           >
             <ImagePlus className="h-4 w-4" />
-            {uploading ? "Uploading…" : `Upload All (${items.length} images)`}
+            {uploading ? "Uploading…" : `Upload All (${items.length} files)`}
           </button>
         </div>
       )}

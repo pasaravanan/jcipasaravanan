@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Edit2, Eye, EyeOff, Trash2, X } from "lucide-react";
+import { Edit2, Eye, EyeOff, Trash2, X, Play } from "lucide-react";
 import { toast } from "sonner";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,7 +49,7 @@ export default function AdminGallery() {
       .from("gallery_posts").update({ is_active: !p.is_active }).eq("id", p.id);
     if (error) toast.error(error.message);
     else {
-      toast.success(p.is_active ? "Image hidden from gallery" : "Image visible on gallery");
+      toast.success(p.is_active ? "Media hidden from gallery" : "Media visible on gallery");
       load();
     }
   };
@@ -62,7 +62,7 @@ export default function AdminGallery() {
       .eq("id", editing.id);
     if (error) toast.error(error.message);
     else {
-      toast.success("Image updated");
+      toast.success("Media updated");
       setEditing(null);
       load();
     }
@@ -71,14 +71,15 @@ export default function AdminGallery() {
   const confirmDelete = async () => {
     if (!deleting) return;
     try {
-      await destroyOnCloudinary(deleting.public_id);
+      const isVideo = deleting.image_url.includes("/video/upload/") || deleting.image_url.match(/\.(mp4|webm|ogg|mov)($|\?)/i);
+      await destroyOnCloudinary(deleting.public_id, isVideo ? "video" : "image");
     } catch (e: any) {
       console.warn("Cloudinary delete failed:", e.message);
     }
     const { error } = await supabase.from("gallery_posts").delete().eq("id", deleting.id);
     if (error) toast.error(error.message);
     else {
-      toast.success("Image deleted successfully");
+      toast.success("Media deleted successfully");
       setDeleting(null);
       load();
     }
@@ -106,48 +107,58 @@ export default function AdminGallery() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((p) => (
-          <div key={p.id} className="overflow-hidden rounded-xl bg-white shadow-sm">
-            <div className="relative aspect-[4/3]">
-              <img
-                src={cldThumb(p.image_url, 500)}
-                alt=""
-                className={`h-full w-full object-cover ${!p.is_active ? "opacity-40" : ""}`}
-              />
-              {!p.is_active && (
-                <span className="absolute left-3 top-3 rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">Hidden</span>
-              )}
+        {filtered.map((p) => {
+          const isVideo = p.image_url.includes("/video/upload/") || p.image_url.match(/\.(mp4|webm|ogg|mov)($|\?)/i);
+          return (
+            <div key={p.id} className="overflow-hidden rounded-xl bg-white shadow-sm">
+              <div className="relative aspect-[4/3]">
+                <img
+                  src={cldThumb(p.image_url, 500)}
+                  alt=""
+                  className={`h-full w-full object-cover ${!p.is_active ? "opacity-40" : ""}`}
+                />
+                {isVideo && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                    <div className="rounded-full bg-black/50 p-2.5 text-white backdrop-blur">
+                      <Play className="h-5 w-5 fill-white" />
+                    </div>
+                  </div>
+                )}
+                {!p.is_active && (
+                  <span className="absolute left-3 top-3 rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">Hidden</span>
+                )}
+              </div>
+              <div className="p-3">
+                <p className={`line-clamp-1 text-sm ${p.caption ? "" : "italic text-muted-foreground"}`}>
+                  {p.caption || "No caption"}
+                </p>
+                <div className="mt-2 flex items-center justify-between text-xs">
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary">{p.category}</span>
+                  <span className="text-muted-foreground">{fmtDate(p.created_at)}</span>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-xs">
+                  <span className={`h-2 w-2 rounded-full ${p.is_active ? "bg-green-500" : "bg-red-500"}`} />
+                  <span>{p.is_active ? "Active" : "Hidden"}</span>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button onClick={() => setEditing(p)} className="flex-1 rounded-lg border py-1.5 text-xs hover:bg-slate-50">
+                    <Edit2 className="mx-auto h-3.5 w-3.5" />
+                  </button>
+                  <button onClick={() => toggleVisible(p)} className="flex-1 rounded-lg border py-1.5 text-xs hover:bg-slate-50">
+                    {p.is_active ? <EyeOff className="mx-auto h-3.5 w-3.5" /> : <Eye className="mx-auto h-3.5 w-3.5" />}
+                  </button>
+                  <button onClick={() => setDeleting(p)} className="flex-1 rounded-lg border py-1.5 text-xs text-red-600 hover:bg-red-50">
+                    <Trash2 className="mx-auto h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="p-3">
-              <p className={`line-clamp-1 text-sm ${p.caption ? "" : "italic text-muted-foreground"}`}>
-                {p.caption || "No caption"}
-              </p>
-              <div className="mt-2 flex items-center justify-between text-xs">
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary">{p.category}</span>
-                <span className="text-muted-foreground">{fmtDate(p.created_at)}</span>
-              </div>
-              <div className="mt-2 flex items-center gap-2 text-xs">
-                <span className={`h-2 w-2 rounded-full ${p.is_active ? "bg-green-500" : "bg-red-500"}`} />
-                <span>{p.is_active ? "Active" : "Hidden"}</span>
-              </div>
-              <div className="mt-3 flex gap-2">
-                <button onClick={() => setEditing(p)} className="flex-1 rounded-lg border py-1.5 text-xs hover:bg-slate-50">
-                  <Edit2 className="mx-auto h-3.5 w-3.5" />
-                </button>
-                <button onClick={() => toggleVisible(p)} className="flex-1 rounded-lg border py-1.5 text-xs hover:bg-slate-50">
-                  {p.is_active ? <EyeOff className="mx-auto h-3.5 w-3.5" /> : <Eye className="mx-auto h-3.5 w-3.5" />}
-                </button>
-                <button onClick={() => setDeleting(p)} className="flex-1 rounded-lg border py-1.5 text-xs text-red-600 hover:bg-red-50">
-                  <Trash2 className="mx-auto h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {editing && (
-        <Modal onClose={() => setEditing(null)} title="Edit Image">
+        <Modal onClose={() => setEditing(null)} title="Edit Media">
           <input
             value={editing.caption || ""}
             onChange={(e) => setEditing({ ...editing, caption: e.target.value })}
@@ -169,8 +180,8 @@ export default function AdminGallery() {
       )}
 
       {deleting && (
-        <Modal onClose={() => setDeleting(null)} title="Delete Image">
-          <p>Are you sure you want to delete this image? This action cannot be undone.</p>
+        <Modal onClose={() => setDeleting(null)} title="Delete Media">
+          <p>Are you sure you want to delete this media? This action cannot be undone.</p>
           <div className="flex gap-2">
             <button onClick={() => setDeleting(null)} className="flex-1 rounded-lg border py-2">Cancel</button>
             <button onClick={confirmDelete} className="flex-1 rounded-lg bg-red-600 py-2 font-medium text-white">Delete</button>
