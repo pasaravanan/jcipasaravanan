@@ -15,6 +15,7 @@ const Footer = () => (
           {[
             { to: "#home", label: "Home" },
             { to: "#services", label: "Financial Services" },
+            { to: "#calculators", label: "Calculators" },
             { to: "#about", label: "About" },
             { to: "#contact", label: "Contact" },
           ].map((l) => (
