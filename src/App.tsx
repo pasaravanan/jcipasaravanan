@@ -8,6 +8,7 @@ import MobileBottomBar from "./components/MobileBottomBar";
 import HeroSection from "./sections/HeroSection";
 import LogoStrip from "./sections/LogoStrip";
 import ServicesCards from "./sections/ServicesCards";
+import CalculatorsSection from "./sections/CalculatorsSection";
 import AboutIntro from "./sections/AboutIntro";
 import DetailedServices from "./sections/DetailedServices";
 import WhyChooseMe from "./sections/WhyChooseMe";
@@ -32,6 +33,7 @@ const PublicSite = () => (
       <InstagramFeed />
       <GallerySection />
       <ServicesCards />
+      <CalculatorsSection />
       <AboutIntro />
       <DetailedServices />
       <WhyChooseMe />
