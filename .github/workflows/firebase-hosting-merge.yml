@@ -18,3 +18,4 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SARAVANANLIC }}
           channelId: live
           projectId: saravananlic
+          firebaseToolsVersion: 15.22.1
