@@ -11,10 +11,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20.11.0
+
+      # Inject Instagram secrets into .env so Vite bakes them into the build
+      - name: Create .env from GitHub Secrets
+        run: |
+          echo "VITE_SUPABASE_PROJECT_ID=${{ secrets.VITE_SUPABASE_PROJECT_ID }}" >> .env
+          echo "VITE_SUPABASE_PUBLISHABLE_KEY=${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}" >> .env
+          echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" >> .env
+          echo "VITE_INSTAGRAM_USER_ID=${{ secrets.VITE_INSTAGRAM_USER_ID }}" >> .env
+          echo "VITE_INSTAGRAM_ACCESS_TOKEN=${{ secrets.VITE_INSTAGRAM_ACCESS_TOKEN }}" >> .env
+
       - run: npm ci && npm run build
+
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
@@ -22,3 +34,30 @@ jobs:
           channelId: live
           projectId: saravananlic
           firebaseToolsVersion: 15.22.1
+
+  deploy_supabase_functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Push Instagram credentials from GitHub Secrets → Supabase Edge Function Secrets
+      - name: Set Supabase secrets from GitHub Secrets
+        run: |
+          supabase secrets set \
+            INSTAGRAM_USER_ID=${{ secrets.INSTAGRAM_USER_ID }} \
+            INSTAGRAM_ACCESS_TOKEN=${{ secrets.INSTAGRAM_ACCESS_TOKEN }} \
+            --project-ref zakdypwlmpusslvmnmds
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      # Deploy the instagram-feed Edge Function
+      - name: Deploy instagram-feed function
+        run: |
+          supabase functions deploy instagram-feed \
+            --project-ref zakdypwlmpusslvmnmds
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
