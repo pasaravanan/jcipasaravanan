@@ -15,11 +15,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.11.0
+          node-version: 22
       - run: npm ci && npm run build
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Deploy Preview to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SARAVANANLIC }}
-          projectId: saravananlic
-          firebaseToolsVersion: 15.22.1
+          firebaseServiceAccount: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          projectId: jcipasaravanan
