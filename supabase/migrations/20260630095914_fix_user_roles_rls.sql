@@ -10,3 +10,4 @@ using (auth.uid() = user_id);
 
 -- Grant execute on has_role function to anon and authenticated roles
 grant execute on function public.has_role(uuid, public.app_role) to anon, authenticated;
+
