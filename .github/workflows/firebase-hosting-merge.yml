@@ -28,37 +28,6 @@ jobs:
 
       - run: npm ci && npm run build
 
-      - name: Diagnostic check of Firebase service account secret
-        env:
-          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SARAVANANLIC }}
-        run: |
-          node -e "
-          const sa = process.env.SERVICE_ACCOUNT;
-          if (!sa) {
-            console.error('Error: Secret is empty or not set!');
-            process.exit(1);
-          }
-          console.log('Secret length:', sa.length);
-          try {
-            const parsed = JSON.parse(sa);
-            console.log('Parsed as JSON successfully!');
-            console.log('JSON Keys:', Object.keys(parsed));
-            if (parsed.private_key) {
-              console.log('Private key length:', parsed.private_key.length);
-              console.log('Private key starts with:', parsed.private_key.substring(0, 30));
-              console.log('Private key ends with:', parsed.private_key.substring(parsed.private_key.length - 30).replace(/\n/g, '\\n'));
-              console.log('Contains real newlines:', parsed.private_key.includes('\n'));
-              console.log('Contains literal backslash-n:', parsed.private_key.includes('\\n'));
-            } else {
-              console.error('Error: private_key field is missing in JSON!');
-            }
-          } catch (e) {
-            console.log('Failed to parse as JSON:', e.message);
-            console.log('First 50 chars of secret:', sa.substring(0, 50));
-            console.log('Last 50 chars of secret:', sa.substring(sa.length - 50));
-          }
-          "
-
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
