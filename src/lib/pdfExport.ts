@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatINR } from "./whatsappShare";
-import { robotoBase64 } from "./pdfFonts";
+import { robotoBase64, robotoBoldBase64 } from "./pdfFonts";
 
 export interface PDFPayload {
   title: string;
@@ -18,6 +18,8 @@ export function downloadCalculatorPDF(p: PDFPayload) {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   doc.addFileToVFS("Roboto-Regular.ttf", robotoBase64);
   doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+  doc.addFileToVFS("Roboto-Bold.ttf", robotoBoldBase64);
+  doc.addFont("Roboto-Bold.ttf", "Roboto", "bold");
   const pageW = doc.internal.pageSize.getWidth();
 
   // Header bar
