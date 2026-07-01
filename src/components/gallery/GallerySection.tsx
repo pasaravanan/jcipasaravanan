@@ -4,6 +4,7 @@ import { Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cldThumb } from "@/lib/cloudinary";
 import GalleryLightbox from "./GalleryLightbox";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 
 type Post = {
   id: string;
@@ -31,6 +32,7 @@ export default function GallerySection() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [visible, setVisible] = useState(PAGE_SIZE);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [api, setApi] = useState<CarouselApi>();
 
   useEffect(() => {
     supabase
@@ -50,6 +52,14 @@ export default function GallerySection() {
   );
   const shown = filtered.slice(0, visible);
 
+  useEffect(() => {
+    if (!api) return;
+    const interval = setInterval(() => {
+      api.scrollNext();
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [api, filtered]);
+
   return (
     <section id="gallery" className="bg-white py-16 md:py-24">
       <div className="container mx-auto px-4">
@@ -66,7 +76,7 @@ export default function GallerySection() {
           </p>
         </motion.div>
 
-        <div className="mb-8 -mx-4 flex gap-2 overflow-x-auto px-4 pb-2">
+        <div className="mb-8 flex flex-wrap gap-2 justify-center pb-2">
           {CATEGORIES.map((c) => (
             <button
               key={c}
@@ -96,66 +106,60 @@ export default function GallerySection() {
             No photos in this category yet.
           </p>
         ) : (
-          <motion.div
-            layout
-            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-          >
-            <AnimatePresence>
-              {shown.map((p, idx) => {
-                const isVideo = p.image_url.includes("/video/upload/") || p.image_url.match(/\.(mp4|webm|ogg|mov)($|\?)/i);
-                return (
-                  <motion.button
-                    key={p.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => setLightboxIndex(idx)}
-                    className="group relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted shadow-md transition hover:shadow-xl"
-                  >
-                    <img
-                      src={cldThumb(p.image_url, 600)}
-                      alt={p.caption || "Gallery item"}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                    />
-                    {isVideo && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/25 transition duration-500">
-                        <div className="rounded-full bg-white/20 p-3 text-white backdrop-blur transition duration-300 group-hover:scale-110">
-                          <Play className="h-6 w-6 fill-white" />
-                        </div>
-                      </div>
-                    )}
-                    {p.category && (
-                      <span
-                        className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-semibold ${
-                          badgeColors[p.category] || "bg-slate-600 text-white"
-                        }`}
-                      >
-                        {p.category}
-                      </span>
-                    )}
-                    {p.caption && (
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 text-left">
-                        <p className="line-clamp-2 text-sm font-medium text-white">{p.caption}</p>
-                      </div>
-                    )}
-                  </motion.button>
-                );
-              })}
-            </AnimatePresence>
-          </motion.div>
-        )}
-
-        {filtered.length > visible && (
-          <div className="mt-10 text-center">
-            <button
-              onClick={() => setVisible((v) => v + PAGE_SIZE)}
-              className="rounded-full bg-primary px-7 py-3 font-semibold text-primary-foreground shadow transition hover:bg-primary/90"
+          <div className="relative px-12">
+            <Carousel
+              setApi={setApi}
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
             >
-              Load More
-            </button>
+              <CarouselContent className="-ml-4">
+                {filtered.map((p, idx) => {
+                  const isVideo = p.image_url.includes("/video/upload/") || p.image_url.match(/\.(mp4|webm|ogg|mov)($|\?)/i);
+                  return (
+                    <CarouselItem key={p.id} className="basis-full sm:basis-1/2 lg:basis-1/3 pl-4">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        onClick={() => setLightboxIndex(idx)}
+                        className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-muted shadow-md transition hover:shadow-xl"
+                      >
+                        <img
+                          src={cldThumb(p.image_url, 600)}
+                          alt={p.caption || "Gallery item"}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                        />
+                        {isVideo && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/25 transition duration-500">
+                            <div className="rounded-full bg-white/20 p-3 text-white backdrop-blur transition duration-300 group-hover:scale-110">
+                              <Play className="h-6 w-6 fill-white" />
+                            </div>
+                          </div>
+                        )}
+                        {p.category && (
+                          <span
+                            className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-semibold ${
+                              badgeColors[p.category] || "bg-slate-600 text-white"
+                            }`}
+                          >
+                            {p.category}
+                          </span>
+                        )}
+                        {p.caption && (
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 text-left">
+                            <p className="line-clamp-2 text-sm font-medium text-white">{p.caption}</p>
+                          </div>
+                        )}
+                      </motion.button>
+                    </CarouselItem>
+                  );
+                })}
+              </CarouselContent>
+              <CarouselPrevious className="-left-10 h-10 w-10 border border-muted-foreground/20 bg-white/80 hover:bg-white text-foreground shadow-sm hover:shadow-md transition-all" />
+              <CarouselNext className="-right-10 h-10 w-10 border border-muted-foreground/20 bg-white/80 hover:bg-white text-foreground shadow-sm hover:shadow-md transition-all" />
+            </Carousel>
           </div>
         )}
       </div>

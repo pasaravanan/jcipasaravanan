@@ -1,4 +1,5 @@
 import { Phone, Mail, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => (
   <footer className="bg-gradient-to-r from-navy via-primary to-navy text-navy-foreground">
@@ -34,8 +35,16 @@ const Footer = () => (
         </ul>
       </div>
     </div>
-    <div className="border-t border-navy-foreground/10 py-4 text-center text-xs text-navy-foreground/50">
-      © {new Date().getFullYear()} JC.HGF.PA.SARAVANAN – Financial Consultant. All rights reserved.
+    <div className="border-t border-navy-foreground/10 py-4 text-xs text-navy-foreground/50">
+      <div className="container mx-auto flex flex-col items-center justify-between gap-2 px-4 sm:flex-row">
+        <span>© {new Date().getFullYear()} JC.HGF.PA.SARAVANAN – Financial Consultant. All rights reserved.</span>
+        <Link 
+          to="/admin" 
+          className="rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-navy-foreground/40 transition-all hover:bg-white/5 hover:text-gold"
+        >
+          Admin Login
+        </Link>
+      </div>
     </div>
   </footer>
 );

@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatINR } from "./whatsappShare";
+import { robotoBase64 } from "./pdfFonts";
 
 export interface PDFPayload {
   title: string;
@@ -15,6 +16,8 @@ const GOLD: [number, number, number] = [201, 162, 39];
 
 export function downloadCalculatorPDF(p: PDFPayload) {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
+  doc.addFileToVFS("Roboto-Regular.ttf", robotoBase64);
+  doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
   const pageW = doc.internal.pageSize.getWidth();
 
   // Header bar
@@ -53,8 +56,8 @@ export function downloadCalculatorPDF(p: PDFPayload) {
     head: [["Your Inputs", "Value"]],
     body: p.inputs.map((i) => [i.label, String(i.value)]),
     theme: "grid",
-    headStyles: { fillColor: NAVY, textColor: 255, fontStyle: "bold" },
-    styles: { fontSize: 10, cellPadding: 6 },
+    headStyles: { fillColor: NAVY, textColor: 255, fontStyle: "bold", font: "Roboto" },
+    styles: { fontSize: 10, cellPadding: 6, font: "Roboto" },
     columnStyles: { 0: { cellWidth: 220 } },
   });
 
@@ -68,9 +71,9 @@ export function downloadCalculatorPDF(p: PDFPayload) {
       typeof r.value === "number" ? `₹ ${formatINR(r.value)}` : String(r.value),
     ]),
     theme: "grid",
-    headStyles: { fillColor: GOLD, textColor: NAVY, fontStyle: "bold" },
-    styles: { fontSize: 11, cellPadding: 7 },
-    columnStyles: { 0: { cellWidth: 220 }, 1: { fontStyle: "bold", textColor: NAVY as unknown as number } },
+    headStyles: { fillColor: GOLD, textColor: NAVY, fontStyle: "bold", font: "Roboto" },
+    styles: { fontSize: 11, cellPadding: 7, font: "Roboto" },
+    columnStyles: { 0: { cellWidth: 220 }, 1: { fontStyle: "bold", font: "Roboto", textColor: NAVY as unknown as number } },
     didParseCell: (data) => {
       const row = p.results[data.row.index];
       if (row?.highlight && data.section === "body") {
@@ -81,6 +84,7 @@ export function downloadCalculatorPDF(p: PDFPayload) {
   });
 
   const disclY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 24;
+  doc.setFont("Roboto", "normal");
   doc.setFontSize(9);
   doc.setTextColor(120, 120, 120);
   const wrapped = doc.splitTextToSize(p.disclaimer, pageW - 80);
