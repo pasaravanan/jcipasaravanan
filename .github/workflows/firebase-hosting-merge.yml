@@ -32,8 +32,8 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-          projectId: jcipasaravanan
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SARAVANANLIC }}
+          projectId: saravananlic
           channelId: live
 
   deploy_supabase_functions:
