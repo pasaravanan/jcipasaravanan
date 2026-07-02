@@ -53,16 +53,36 @@ export default function GallerySection() {
   const shown = filtered.slice(0, visible);
 
   useEffect(() => {
+    if (api) {
+      api.reInit();
+    }
+  }, [api, filtered]);
+
+  useEffect(() => {
     if (!api) return;
     const interval = setInterval(() => {
-      api.scrollNext();
+      if (api.canScrollNext()) {
+        api.scrollNext();
+      } else {
+        api.scrollTo(0, true); // true = jump instantly, do not animate backwards
+      }
     }, 3500);
     return () => clearInterval(interval);
   }, [api, filtered]);
 
   return (
-    <section id="gallery" className="bg-white py-16 md:py-24">
-      <div className="container mx-auto px-4">
+    <section id="gallery" className="section-pad relative overflow-hidden"
+      style={{ background: "linear-gradient(155deg, hsl(330,72%,96%) 0%, hsl(15,78%,95%) 35%, hsl(38,72%,95%) 65%, hsl(50,68%,96%) 100%)" }}>
+
+      {/* Decorative blobs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-16 -right-16 h-80 w-80 rounded-full opacity-20 blur-3xl"
+          style={{ background: "hsl(330,80%,72%)" }} />
+        <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full opacity-15 blur-3xl"
+          style={{ background: "hsl(15,80%,70%)" }} />
+      </div>
+
+      <div className="container relative mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

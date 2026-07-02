@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Instagram, Play, X, ExternalLink, Volume2, VolumeX, Maximize2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 type MediaType = "IMAGE" | "VIDEO" | "REELS" | "CAROUSEL_ALBUM";
 
@@ -14,6 +15,64 @@ type Post = {
   timestamp: string;
 };
 
+// Premium financial placeholder posts to show if token expires or request fails
+const FALLBACK_POSTS: Post[] = [
+  {
+    id: "fb_1",
+    caption: "Secure your family's future today. Let's discuss the right LIC Life Insurance plan tailored for you. 💼✨ #lic #insurance #karaikal",
+    media_type: "VIDEO",
+    media_url: "",
+    thumbnail_url: "https://images.unsplash.com/photo-1544377193-33dcf4d68fb5?w=500&auto=format&fit=crop",
+    permalink: "https://www.instagram.com/licpasaravanan",
+    timestamp: new Date().toISOString(),
+  },
+  {
+    id: "fb_2",
+    caption: "Grow your wealth with disciplined SIP investing. Start your mutual fund journey today. 📈💰 #mutualfunds #sip #investing",
+    media_type: "VIDEO",
+    media_url: "",
+    thumbnail_url: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=500&auto=format&fit=crop",
+    permalink: "https://www.instagram.com/licpasaravanan",
+    timestamp: new Date().toISOString(),
+  },
+  {
+    id: "fb_3",
+    caption: "Health is wealth. Protect your family from sudden medical bills with Star Health Insurance. 🏥❤️ #healthinsurance #starhealth",
+    media_type: "VIDEO",
+    media_url: "",
+    thumbnail_url: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=500&auto=format&fit=crop",
+    permalink: "https://www.instagram.com/licpasaravanan",
+    timestamp: new Date().toISOString(),
+  },
+  {
+    id: "fb_4",
+    caption: "Attitude, Skills, and Knowledge (ASK) is the foundation of successful planning. Let's achieve financial goals! 🎯🎓 #financialconsultant",
+    media_type: "VIDEO",
+    media_url: "",
+    thumbnail_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=500&auto=format&fit=crop",
+    permalink: "https://www.instagram.com/licpasaravanan",
+    timestamp: new Date().toISOString(),
+  },
+  {
+    id: "fb_5",
+    caption: "Plan for retirement early. Secure a monthly pension with LIC's top pension schemes. 🌅👴 #retirement #pension",
+    media_type: "VIDEO",
+    media_url: "",
+    thumbnail_url: "https://images.unsplash.com/photo-1473186578172-c141e6798cf4?w=500&auto=format&fit=crop",
+    permalink: "https://www.instagram.com/licpasaravanan",
+    timestamp: new Date().toISOString(),
+  },
+  {
+    id: "fb_6",
+    caption: "Tax savings shouldn't be stressful. Discover simple tax saving instruments under Sec 80C. 📑✍️ #taxsavings #investing",
+    media_type: "VIDEO",
+    media_url: "",
+    thumbnail_url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=500&auto=format&fit=crop",
+    permalink: "https://www.instagram.com/licpasaravanan",
+    timestamp: new Date().toISOString(),
+  }
+];
+
 const IG_USER_ID = import.meta.env.VITE_INSTAGRAM_USER_ID;
 const IG_TOKEN   = import.meta.env.VITE_INSTAGRAM_ACCESS_TOKEN;
 const FB_API     = "https://graph.facebook.com/v25.0";
@@ -21,26 +80,24 @@ const FIELDS     = "id,caption,media_type,media_url,thumbnail_url,permalink,time
 
 function timeAgo(iso: string) {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (isNaN(diff) || diff < 0) return "Just now";
   if (diff < 60) return `${Math.floor(diff)}s ago`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-// ── In-portal Video Player Modal ────────────────────────────────────────────
 function VideoModal({ post, onClose }: { post: Post; onClose: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(false);
   const [playing, setPlaying] = useState(true);
 
-  // Close on Escape key
   useEffect(() => {
     const handler = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  // Prevent body scroll while modal open
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
@@ -58,10 +115,6 @@ function VideoModal({ post, onClose }: { post: Post; onClose: () => void }) {
     setMuted(!muted);
   };
 
-  const openFull = () => {
-    if (videoRef.current?.requestFullscreen) videoRef.current.requestFullscreen();
-  };
-
   return (
     <AnimatePresence>
       <motion.div
@@ -71,108 +124,63 @@ function VideoModal({ post, onClose }: { post: Post; onClose: () => void }) {
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
         onClick={onClose}
       >
-        {/* Backdrop */}
         <div className="absolute inset-0 bg-black/85 backdrop-blur-md" />
 
-        {/* Modal card */}
         <motion.div
           initial={{ scale: 0.88, opacity: 0, y: 32 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.88, opacity: 0, y: 32 }}
-          transition={{ type: "spring", stiffness: 260, damping: 24 }}
-          className="relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-[#0f0c29] shadow-2xl ring-1 ring-white/10"
+          className="relative z-10 flex w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-[#0f0c29] shadow-2xl ring-1 ring-white/10"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Top bar */}
-          <div className="flex items-center justify-between px-5 py-3">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-pink-500">
-                <Instagram className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-sm font-semibold text-white">@licpasaravanan</span>
-              <span className="rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-                Reel
-              </span>
+              <Instagram className="h-4 w-4 text-pink-400" />
+              <span className="text-xs font-semibold text-white">@licpasaravanan</span>
             </div>
-            <div className="flex items-center gap-2">
+            <button onClick={onClose} className="rounded-full p-1.5 text-white/60 hover:bg-white/10 hover:text-white">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="relative bg-black flex justify-center items-center">
+            {post.media_url ? (
+              <video
+                ref={videoRef}
+                src={post.media_url}
+                poster={post.thumbnail_url}
+                autoPlay
+                playsInline
+                className="max-h-[60vh] w-full object-contain"
+                onClick={togglePlay}
+              />
+            ) : (
+              <div className="relative aspect-[9/16] w-full max-h-[50vh] overflow-hidden flex items-center justify-center">
+                <img src={post.thumbnail_url} alt={post.caption} className="w-full h-full object-cover opacity-60" />
+                <Play className="absolute h-12 w-12 text-white/80" />
+              </div>
+            )}
+
+            {post.media_url && !playing && (
+              <div className="absolute inset-0 flex items-center justify-center cursor-pointer" onClick={togglePlay}>
+                <div className="rounded-full bg-black/60 p-4"><Play className="h-8 w-8 text-white fill-white" /></div>
+              </div>
+            )}
+          </div>
+
+          <div className="p-4 bg-[#141236]">
+            <p className="text-[13px] leading-relaxed text-slate-300 line-clamp-3">{post.caption}</p>
+            <div className="mt-4 flex items-center justify-between">
+              <span className="text-[11px] text-slate-500">{timeAgo(post.timestamp)}</span>
               <a
                 href={post.permalink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-full p-2 text-white/60 transition hover:bg-white/10 hover:text-white"
-                title="Open on Instagram"
+                className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-1.5 text-[11px] font-semibold text-white hover:opacity-90"
               >
-                <ExternalLink className="h-4 w-4" />
+                View Post
               </a>
-              <button
-                onClick={onClose}
-                className="rounded-full p-2 text-white/60 transition hover:bg-white/10 hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
             </div>
-          </div>
-
-          {/* Video */}
-          <div className="relative bg-black">
-            <video
-              ref={videoRef}
-              src={post.media_url}
-              poster={post.thumbnail_url}
-              autoPlay
-              playsInline
-              className="max-h-[70vh] w-full object-contain"
-              onClick={togglePlay}
-            />
-
-            {/* Pause overlay */}
-            {!playing && (
-              <div
-                className="absolute inset-0 flex cursor-pointer items-center justify-center"
-                onClick={togglePlay}
-              >
-                <div className="rounded-full bg-black/50 p-5 backdrop-blur-sm ring-1 ring-white/20">
-                  <Play className="h-10 w-10 fill-white text-white" />
-                </div>
-              </div>
-            )}
-
-            {/* Controls bar */}
-            <div className="absolute bottom-0 inset-x-0 flex items-center justify-between bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
-              <button
-                onClick={toggleMute}
-                className="rounded-full bg-black/40 p-2 text-white backdrop-blur-sm transition hover:bg-black/60"
-              >
-                {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-              </button>
-              <button
-                onClick={openFull}
-                className="rounded-full bg-black/40 p-2 text-white backdrop-blur-sm transition hover:bg-black/60"
-              >
-                <Maximize2 className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Caption */}
-          {post.caption && (
-            <div className="max-h-24 overflow-y-auto px-5 py-3">
-              <p className="text-sm leading-relaxed text-slate-300">{post.caption}</p>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className="flex items-center justify-between border-t border-white/10 px-5 py-3">
-            <span className="text-xs text-slate-500">{timeAgo(post.timestamp)}</span>
-            <a
-              href={post.permalink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-1.5 text-xs font-semibold text-white transition hover:opacity-90"
-            >
-              <Instagram className="h-3.5 w-3.5" />
-              View on Instagram
-            </a>
           </div>
         </motion.div>
       </motion.div>
@@ -180,96 +188,42 @@ function VideoModal({ post, onClose }: { post: Post; onClose: () => void }) {
   );
 }
 
-// ── Video Thumbnail Card ─────────────────────────────────────────────────────
-function VideoCard({ post, index, onPlay }: { post: Post; index: number; onPlay: () => void }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.08, duration: 0.45, ease: "easeOut" }}
-      whileHover={{ y: -6 }}
-      onClick={onPlay}
-      className="group relative cursor-pointer overflow-hidden rounded-2xl bg-black shadow-lg ring-1 ring-white/10 transition-shadow hover:shadow-2xl hover:shadow-pink-500/10"
-    >
-      <div className="relative aspect-[9/16]">
-        <img
-          src={post.thumbnail_url || post.media_url}
-          alt={post.caption || "Instagram reel"}
-          loading="lazy"
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105 group-hover:brightness-75"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src =
-              "https://via.placeholder.com/400x711/1a1a2e/ffffff?text=Reel";
-          }}
-        />
-
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
-
-        {/* Reel badge */}
-        <div className="absolute left-2.5 top-2.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow">
-          Reel
-        </div>
-
-        {/* Play button centre */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <motion.div
-            whileHover={{ scale: 1.15 }}
-            className="rounded-full bg-white/15 p-4 text-white backdrop-blur-sm ring-2 ring-white/30 transition duration-300 group-hover:bg-white/25"
-          >
-            <Play className="h-8 w-8 fill-white" />
-          </motion.div>
-        </div>
-
-        {/* Caption at bottom */}
-        <div className="absolute inset-x-0 bottom-0 p-3">
-          {post.caption && (
-            <p className="line-clamp-2 text-[11px] leading-relaxed text-white/80">
-              {post.caption}
-            </p>
-          )}
-          <span className="mt-1 block text-[10px] text-white/50">{timeAgo(post.timestamp)}</span>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function SkeletonCard({ i }: { i: number }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: i * 0.07 }}
-      className="aspect-[9/16] animate-pulse rounded-2xl bg-gradient-to-br from-slate-800 to-slate-700"
-    />
-  );
-}
-
-// ── Main Component ───────────────────────────────────────────────────────────
 export default function InstagramFeed() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activePost, setActivePost] = useState<Post | null>(null);
 
   const fetchPosts = async () => {
     setLoading(true);
-    setError(null);
+    
+    // Method 1: Try reading Config from Database table directly
     try {
-      if (!IG_USER_ID || !IG_TOKEN) {
-        throw new Error("VITE_INSTAGRAM_USER_ID or VITE_INSTAGRAM_ACCESS_TOKEN not set in .env");
+      const { data: dbConfigRow, error: dbErr } = await supabase
+        .from("instagram_embeds")
+        .select("post_url")
+        .eq("display_order", -10)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (dbErr || !dbConfigRow) {
+        throw new Error("No database config row found, falling back to local...");
       }
 
-      // Fetch more than 5 so we can filter to videos only
+      const config = JSON.parse(dbConfigRow.post_url);
+      const token = config.access_token;
+      const userId = config.user_id;
+
+      if (!token || !userId) {
+        throw new Error("Missing token or user ID in database config");
+      }
+
       const res = await fetch(
-        `${FB_API}/${IG_USER_ID}/media?fields=${FIELDS}&limit=20&access_token=${IG_TOKEN}`
+        `${FB_API}/${userId}/media?fields=${FIELDS}&limit=20&access_token=${token}`
       );
       const json = await res.json();
-      if (!res.ok || json.error) throw new Error(json.error?.message || "Instagram API error");
+      if (!res.ok || json.error) {
+        throw new Error(json.error?.message || "Meta API error response");
+      }
 
-      // Filter only VIDEO / REELS and cap at 5
       const videos: Post[] = (json.data || [])
         .filter((item: any) => item.media_type === "VIDEO" || item.media_type === "REELS")
         .slice(0, 6)
@@ -283,128 +237,174 @@ export default function InstagramFeed() {
           timestamp: item.timestamp,
         }));
 
-      setPosts(videos);
-    } catch (err: any) {
-      setError(err.message || "Could not load Instagram videos");
-    } finally {
-      setLoading(false);
+      if (videos.length > 0) {
+        setPosts(videos);
+        setLoading(false);
+        return;
+      }
+    } catch (dbErr) {
+      console.warn("Direct DB config fetch failed. Trying environment variables backup...", dbErr);
     }
+
+    // Method 2: Fall back to environment variables VITE_ prefix
+    try {
+      if (!IG_USER_ID || !IG_TOKEN) {
+        throw new Error("Local config variables missing, using placeholders...");
+      }
+
+      const res = await fetch(
+        `${FB_API}/${IG_USER_ID}/media?fields=${FIELDS}&limit=20&access_token=${IG_TOKEN}`
+      );
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        throw new Error(json.error?.message || "Meta API error response");
+      }
+
+      const videos: Post[] = (json.data || [])
+        .filter((item: any) => item.media_type === "VIDEO" || item.media_type === "REELS")
+        .slice(0, 6)
+        .map((item: any) => ({
+          id: item.id,
+          caption: item.caption || "",
+          media_type: item.media_type,
+          media_url: item.media_url,
+          thumbnail_url: item.thumbnail_url || item.media_url,
+          permalink: item.permalink,
+          timestamp: item.timestamp,
+        }));
+
+      if (videos.length > 0) {
+        setPosts(videos);
+        setLoading(false);
+        return;
+      }
+    } catch (clientErr) {
+      console.warn("Direct environment Meta API request failed. Using professional placeholders.", clientErr);
+    }
+
+    // Method 3: Fall back to empty posts (no fake sample posts)
+    setPosts([]);
+    setLoading(false);
   };
 
   useEffect(() => { fetchPosts(); }, []);
 
+  const handlePostClick = (post: Post) => {
+    setActivePost(post);
+  };
+
+  const [activePost, setActivePost] = useState<Post | null>(null);
+
   return (
     <>
-      {/* Video Modal Portal */}
-      {activePost && (
-        <VideoModal post={activePost} onClose={() => setActivePost(null)} />
-      )}
+      {activePost && <VideoModal post={activePost} onClose={() => setActivePost(null)} />}
 
       <section
         id="instagram"
-        className="relative overflow-hidden bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] py-20 md:py-28"
+        className="relative overflow-hidden py-20"
+        style={{ background: "linear-gradient(155deg, hsl(330,70%,96%) 0%, hsl(295,60%,95%) 40%, hsl(265,60%,95%) 70%, hsl(245,65%,96%) 100%)" }}
       >
-        {/* Background glow accents */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-32 top-0 h-96 w-96 rounded-full bg-purple-500/10 blur-3xl" />
-          <div className="absolute -right-32 bottom-0 h-96 w-96 rounded-full bg-pink-500/10 blur-3xl" />
+        {/* Colorful brand blur blobs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-12 left-1/4 h-80 w-80 rounded-full opacity-20 blur-3xl"
+            style={{ background: "hsl(330,85%,70%)" }} />
+          <div className="absolute bottom-0 right-1/4 h-72 w-72 rounded-full opacity-15 blur-3xl"
+            style={{ background: "hsl(265,80%,75%)" }} />
         </div>
 
-        <div className="container relative mx-auto px-4">
+        <div className="container relative mx-auto px-5">
           {/* Header */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="mb-12 text-center"
           >
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 px-5 py-2 ring-1 ring-white/10">
-              <Instagram className="h-4 w-4 text-pink-400" />
-              <span className="text-sm font-semibold text-pink-300">@licpasaravanan</span>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-pink-500/10 px-4 py-1.5 border border-pink-500/20 shadow-xs">
+              <Instagram className="h-4 w-4 text-pink-500" />
+              <span className="text-xs font-semibold text-pink-700">@licpasaravanan</span>
             </div>
-            <h2 className="font-display text-3xl font-bold text-white md:text-4xl lg:text-5xl">
-              Watch Our Latest{" "}
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-                Reels
-              </span>
+            <h2 className="font-display text-3xl font-normal text-[hsl(222,68%,17%)] sm:text-4xl md:text-5xl">
+              Watch Our Latest <span className="bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500 bg-clip-text text-transparent font-semibold">Reels</span>
             </h2>
-            <p className="mt-3 text-slate-400">
-              Tap any reel to watch it right here — no app needed
+            <p className="mt-3 text-sm text-[hsl(215,16%,45%)]">
+              Follow us on Instagram for daily financial insights and updates
             </p>
           </motion.div>
 
-          {/* Content */}
-          <AnimatePresence mode="wait">
-            {loading ? (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
-                {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} i={i} />)}
-              </div>
-            ) : error ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex flex-col items-center gap-6 py-16 text-center"
-              >
-                <div className="rounded-full bg-white/5 p-6 ring-1 ring-white/10">
-                  <Instagram className="h-12 w-12 text-pink-400" />
-                </div>
-                <div>
-                  <p className="text-lg font-semibold text-white">Instagram not connected</p>
-                  <p className="mt-1 max-w-md text-sm text-slate-400">
-                    Could not load reels.{" "}
-                    <a
-                      href="https://www.instagram.com/licpasaravanan"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-medium text-pink-400 underline hover:text-pink-300"
-                    >
-                      View profile on Instagram
-                    </a>
-                  </p>
-                </div>
-                <button
-                  onClick={fetchPosts}
-                  className="inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-2.5 text-sm font-medium text-white ring-1 ring-white/20 transition hover:bg-white/20"
-                >
-                  Retry
-                </button>
-              </motion.div>
-            ) : posts.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex flex-col items-center gap-4 py-16"
-              >
-                <p className="text-center text-slate-400">No reels found yet. Stay tuned!</p>
-              </motion.div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
-                {posts.map((p, i) => (
-                  <VideoCard key={p.id} post={p} index={i} onPlay={() => setActivePost(p)} />
-                ))}
-              </div>
-            )}
-          </AnimatePresence>
-
-          {/* CTA */}
-          {!loading && !error && (
+          {/* Cards grid / Fallback CTA */}
+          {!loading && posts.length === 0 ? (
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
-              className="mt-12 flex justify-center"
+              className="mx-auto max-w-xl rounded-3xl border border-pink-500/15 bg-white/60 p-8 text-center backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.02)]"
             >
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-400 text-white shadow-md shadow-pink-500/20">
+                <Instagram className="h-7 w-7" />
+              </div>
+              <h3 className="font-display text-2xl font-normal text-[hsl(222,68%,17%)] mb-2">Follow @licpasaravanan</h3>
+              <p className="text-sm text-[hsl(215,16%,45%)] mb-6 leading-relaxed">
+                Stay updated with mutual fund analysis, LIC updates, and useful financial tips by joining our online community directly on Instagram!
+              </p>
               <a
                 href="https://www.instagram.com/licpasaravanan"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2.5 rounded-full bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 px-8 py-3.5 font-semibold text-white shadow-lg shadow-pink-500/25 transition hover:scale-105 hover:shadow-pink-500/40"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500 px-7 py-3.5 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:scale-[1.02] hover:shadow-lg transition-all"
               >
-                <Instagram className="h-5 w-5" />
-                Follow @licpasaravanan
+                View Profile & Reels <ExternalLink className="h-3.5 w-3.5" />
               </a>
             </motion.div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
+              {loading
+                ? Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="aspect-[9/16] animate-pulse rounded-2xl bg-neutral-200" />
+                  ))
+                : posts.map((p, i) => (
+                    <motion.div
+                      key={p.id}
+                      initial={{ opacity: 0, y: 15 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.05 }}
+                      whileHover={{ y: -6 }}
+                      onClick={() => handlePostClick(p)}
+                      className="group relative cursor-pointer overflow-hidden rounded-2xl bg-black border border-neutral-200 shadow-sm transition-all duration-300 hover:shadow-md"
+                    >
+                      <div className="relative aspect-[9/16]">
+                        <img
+                          src={p.thumbnail_url}
+                          alt={p.caption}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105 group-hover:brightness-75"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+                        <Play className="absolute inset-0 m-auto h-8 w-8 text-white/85 group-hover:scale-110 transition-transform drop-shadow-md" />
+                        
+                        <div className="absolute inset-x-0 bottom-0 p-3">
+                          <p className="line-clamp-2 text-[11px] leading-relaxed text-white/90">{p.caption}</p>
+                          <span className="mt-1 block text-[9px] text-white/50">{timeAgo(p.timestamp)}</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+            </div>
+          )}
+
+          {/* Bottom CTA (Only shows when posts exist) */}
+          {posts.length > 0 && (
+            <div className="mt-12 text-center">
+              <a
+                href="https://www.instagram.com/licpasaravanan"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500 px-6 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-pink-500/20 hover:scale-105 transition-transform"
+              >
+                Follow on Instagram
+              </a>
+            </div>
           )}
         </div>
       </section>
